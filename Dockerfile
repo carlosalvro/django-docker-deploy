@@ -1,29 +1,19 @@
-# Use the official Python runtime image
-FROM python:3.13  
+# setting up base image
+FROM python:3.11.5-slim-bullseye
 
-# Create the app directory
-RUN mkdir -p  /home/app
+# prevents python buffering stdout and stderr
 
-# Set the working directory inside the container
-WORKDIR /home/app
+ENV PIP_DISABLE_PIP_VERSION_CHECK 1
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Set environment variables 
-# Prevents Python from writing pyc files to disk
-ENV PYTHONDONTWRITEBYTECODE=1
-#Prevents Python from buffering stdout and stderr
-ENV PYTHONUNBUFFERED=1 
+# sets up the working directory for any RUN, CMD, ENTRYPOINT, COPY and ADD instructions 
+WORKDIR /app
 
-# Upgrade pip
-RUN pip install --upgrade pip 
+# copies files and directories from current directory to WORKDIR
+COPY . /app/
 
-# Copy the Django project  and install dependencies
-COPY requirements.txt  /home/app
-
-# run this command to install all dependencies 
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the Django project to the container
-COPY . /home/app
-# Expose the Django port
-
-EXPOSE 8000
+# install dependencies
+RUN pip install --upgrade pip
+COPY ./requirements.txt /app/
+RUN pip install -r requirements.txt
