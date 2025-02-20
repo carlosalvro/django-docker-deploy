@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Show Data</title>
+</head>
+<body>
+    <h1>Names</h1>
+    <ul>
+        {% for name in names %}
+            <li>{{ name.name }}</li>
+        {% endfor %}
+    </ul>
+
+    <h1>Ages</h1>
+    <ul>
+        {% for age in ages %}
+            <li>{{ age.age }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
