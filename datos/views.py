@@ -4,7 +4,7 @@ from .models import Name, Age
 import random
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+    return HttpResponse("Hola! si ves esto es porque tu lobo te ama :) Te amo mi Dafnen!")
 
 def show_data(request):
     names = Name.objects.all()
