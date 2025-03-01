@@ -1,11 +1,44 @@
 services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy    
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./certs:/etc/nginx/certs:ro
+      - ./vhost.d:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html   
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: nginx-letsencrypt
+    restart: always
+    depends_on:
+      - nginx-proxy
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+      - TRUST_DOWNSTREAM_PROXY=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/nginx/certs:rw
+      - ./vhost.d:/etc/nginx/vhost.d:rw
+      - ./html:/usr/share/nginx/html:rw
   web:
     build: .
+    image: carlosalvro/probandolo:prod
     container_name: django_docker
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
     volumes:
       - ./static:/app/staticfiles
     env_file:
       - .env
+    environment:
+      - VIRTUAL_HOST=admin.srcocol.com
+      - LETSENCRYPT_HOST=admin.srcocol.com
+      - LETSENCRYPT_EMAIL=carlose.alvro@gmail.com
     depends_on:
       - postgres_db
 
@@ -21,15 +54,18 @@ services:
       - POSTGRES_DB=${DATABASE_NAME}
       - POSTGRES_USER=${DATABASE_USER}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-  frontend-proxy:
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./static:/static:ro
-    depends_on:
-      - web
 
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: 
+      - "--cleanup"
+      - "--label-enable"
+      - "--interval"
+      - "30"
+      - "--rolling-restart"
 volumes:
   postgres_data:
